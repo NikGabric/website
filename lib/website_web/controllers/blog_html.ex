@@ -11,7 +11,7 @@ defmodule WebsiteWeb.BlogHTML do
     ~H"""
     <.link
       navigate={~p"/blog/#{@slug}"}
-      class="flex h-32 gap-2 rounded-lg outline outline-neutral hover:bg-base-200"
+      class="flex h-32 gap-2 rounded-lg outline outline-neutral hover:bg-secondary"
     >
       <img src={~p"/images/placeholder.svg"} alt="" class="rounded-xl p-2" />
 
