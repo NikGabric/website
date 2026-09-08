@@ -20,13 +20,16 @@ defmodule WebsiteWeb.Layouts do
       </.link>
 
       <div class="flex gap-8">
+        <.link navigate={~p"/cv"}>
+          cv
+        </.link>
         <.link navigate={~p"/blog"}>
           blog
         </.link>
       </div>
     </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8 max-w-240 mx-auto">
+    <main class="py-20 max-w-240 mx-auto">
       <div class="mx-auto space-y-4">
         {render_slot(@inner_block)}
       </div>
