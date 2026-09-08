@@ -1,4 +1,4 @@
-defmodule WebsiteWeb.PageHTML do
+defmodule WebsiteWeb.HomeHTML do
   @moduledoc """
   This module contains pages rendered by PageController.
 
@@ -6,5 +6,5 @@ defmodule WebsiteWeb.PageHTML do
   """
   use WebsiteWeb, :html
 
-  embed_templates "page_html/*"
+  embed_templates "home_html/*"
 end
