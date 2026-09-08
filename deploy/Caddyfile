@@ -1,0 +1,8 @@
+{
+	email nik.gabric@protonmail.com
+}
+
+gabric.dev {
+	encode zstd gzip
+	reverse_proxy app:4000
+}
