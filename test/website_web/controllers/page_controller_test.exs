@@ -3,6 +3,9 @@ defmodule WebsiteWeb.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Peace of mind from prototype to production"
+    html = html_response(conn, 200)
+
+    assert html =~ ~p"/blog"
+    assert html =~ ~p"/cv"
   end
 end
