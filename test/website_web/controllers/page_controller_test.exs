@@ -5,7 +5,6 @@ defmodule WebsiteWeb.PageControllerTest do
     conn = get(conn, ~p"/")
     html = html_response(conn, 200)
 
-    assert html =~ ~p"/blog"
-    assert html =~ ~p"/cv"
+    assert html |> LazyHTML.from_document() |> LazyHTML.query("#home-intro") |> Enum.any?()
   end
 end
