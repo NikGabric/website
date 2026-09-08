@@ -3,6 +3,12 @@ name: Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Existing image SHA to redeploy (blank = build from main)"
+        required: false
+        default: ""
 
 concurrency:
   group: deploy
@@ -14,6 +20,7 @@ jobs:
 
   build:
     needs: test
+    if: ${{ inputs.image_tag == '' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,20 +47,22 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    needs: build
+    needs: [test, build]
+    if: ${{ !cancelled() && needs.test.result == 'success' && needs.build.result != 'failure' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
       - name: Sync compose files
         env:
@@ -68,16 +77,45 @@ jobs:
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
         run: |
           ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" \
             IMAGE_TAG="$IMAGE_TAG" bash -s <<'REMOTE'
           set -euo pipefail
           cd /opt/website
+          : "${IMAGE_TAG:?IMAGE_TAG not received}"
           export IMAGE_TAG
+
+          # Persist the deployed tag so a bare `docker compose up -d` on the
+          # server reuses it instead of silently rolling forward to `latest`.
+          # .env also holds SECRET_KEY_BASE and the DB password: never truncate it.
+          [ -f .env ] || { echo "/opt/website/.env missing"; exit 1; }
+          tmp=$(mktemp /opt/website/.env.XXXXXX)
+          grep -v '^IMAGE_TAG=' .env > "$tmp" || true
+          printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG" >> "$tmp"
+          chmod 600 "$tmp"
+          mv "$tmp" .env
+
           docker compose pull
           docker compose up -d db
           docker compose run --rm app /app/bin/migrate
-          docker compose up -d
-          docker image prune -f
+          docker compose up -d --wait
+
+          # Caddyfile is a bind mount: its contents change without changing the
+          # service config hash, so `up -d` never restarts caddy. Reload is
+          # atomic and validated, so TLS termination is never dropped.
+          docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+
+          # Per-sha tags are never dangling, so a plain prune collects nothing.
+          # -a with an age bound reclaims them; images used by a container are kept.
+          docker image prune -af --filter "until=336h"
           REMOTE
+
+      - name: Verify site is serving
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -fsS -o /dev/null -w '%{http_code}' https://gabric.dev/ || true)
+            [ "$code" = "200" ] && break
+            sleep 6
+          done
+          [ "$code" = "200" ] || { echo "site did not return 200 after deploy (last: ${code:-none})"; exit 1; }
