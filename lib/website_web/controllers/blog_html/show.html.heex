@@ -1,0 +1,14 @@
+<Layouts.app flash={@flash}>
+  <.header>
+    {@post.title}
+    <:actions>
+      <.button navigate={~p"/blog"}>
+        <.icon name="hero-arrow-left" /> Back to blog
+      </.button>
+    </:actions>
+  </.header>
+
+  <article class="prose mt-8 max-w-none">
+    {@post.body}
+  </article>
+</Layouts.app>

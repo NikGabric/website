@@ -1,0 +1,9 @@
+<Layouts.app flash={@flash}>
+  <.header>Blog</.header>
+
+  <ul class="mt-8 space-y-8">
+    <li :for={post <- @posts}>
+      <.blog_card title={post.title} excerpt={post.excerpt} slug={post.slug} />
+    </li>
+  </ul>
+</Layouts.app>

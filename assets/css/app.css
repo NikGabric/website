@@ -36,11 +36,13 @@
   font-style: italic;
   font-weight: 700;
   font-display: swap;
-  src: url("/fonts/courier-prime/courier-prime-bold-italic.woff2") format("woff2");
+  src: url("/fonts/courier-prime/courier-prime-bold-italic.woff2")
+    format("woff2");
 }
 
 @theme {
-  --font-sans: "Courier Prime", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans:
+    "Courier Prime", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
@@ -95,6 +97,13 @@
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
 /* Make LiveView wrapper divs transparent for layout */
-[data-phx-session], [data-phx-teleported-src] { display: contents }
+[data-phx-session],
+[data-phx-teleported-src] {
+  display: contents;
+}
 
 /* This file is for your main application CSS */
+a {
+  @apply hover:underline;
+  @apply hover:cursor-pointer;
+}

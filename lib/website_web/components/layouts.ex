@@ -14,10 +14,16 @@ defmodule WebsiteWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="py-4 max-w-240 mx-auto">
-      <a href={~p"/"}>
+    <header class="flex justify-between py-4 max-w-240 mx-auto">
+      <.link navigate={~p"/"}>
         gabric.dev
-      </a>
+      </.link>
+
+      <div class="flex gap-8">
+        <.link navigate={~p"/blog"}>
+          blog
+        </.link>
+      </div>
     </header>
 
     <main class="px-4 py-20 sm:px-6 lg:px-8 max-w-240 mx-auto">
