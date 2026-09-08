@@ -57,7 +57,10 @@ posts = [
 
 for attrs <- posts do
   case Blog.create_post(attrs) do
-    {:ok, post} -> IO.puts("Created post: #{post.title}")
-    {:error, changeset} -> IO.inspect(changeset.errors, label: "Failed to create post #{attrs.title}")
+    {:ok, post} ->
+      IO.puts("Created post: #{post.title}")
+
+    {:error, changeset} ->
+      IO.inspect(changeset.errors, label: "Failed to create post #{attrs.title}")
   end
 end
