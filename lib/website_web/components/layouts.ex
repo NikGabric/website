@@ -15,9 +15,9 @@ defmodule WebsiteWeb.Layouts do
   def app(assigns) do
     ~H"""
     <header class="py-4 max-w-240 mx-auto">
-      <div>
+      <a href={~p"/"}>
         gabric.dev
-      </div>
+      </a>
     </header>
 
     <main class="px-4 py-20 sm:px-6 lg:px-8 max-w-240 mx-auto">
