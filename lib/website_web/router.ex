@@ -21,6 +21,8 @@ defmodule WebsiteWeb.Router do
 
     get "/blog", BlogController, :index
     get "/blog/:slug", BlogController, :show
+
+    get "/cv", CvController, :show
   end
 
   # Other scopes may use custom stacks.
