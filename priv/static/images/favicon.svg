@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="gabric.dev">
+  <title>gabric.dev</title>
+  <!-- Aperture G: the counter is a six-sided iris, so the camera reference sits
+       in the silhouette and survives rasterisation down to 16px. Colours are the
+       site's own daisyUI theme: base-300 ground, primary orange mark. -->
+  <rect width="64" height="64" rx="13" fill="#13171c"/>
+  <path d="M32 13 L49 23 L49 41 L32 51 L15 41 L15 23 Z"
+        fill="none" stroke="#ff6700" stroke-width="8.5" stroke-linejoin="round"/>
+  <!-- Punches the G's opening out of the iris, then lays the crossbar back in
+       flush with the outer edge. -->
+  <rect x="41" y="25.5" width="23" height="13" fill="#13171c"/>
+  <rect x="29" y="27.9" width="24.3" height="8.2" fill="#ff6700"/>
+</svg>
