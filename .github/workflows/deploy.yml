@@ -122,7 +122,13 @@ jobs:
 
           docker compose pull
           docker compose up -d db
-          docker compose run --rm app /app/bin/migrate
+          # -T plus </dev/null: this whole script arrives on ssh's stdin, and
+          # `docker compose run` attaches stdin by default, so it SWALLOWS the
+          # remaining lines of the script. That is exactly how the first deploy
+          # migrated the database and then silently skipped `up -d --wait`, the
+          # caddy reload and the prune while still exiting 0. The `exec` below
+          # already passes -T for this same reason.
+          docker compose run --rm -T app /app/bin/migrate </dev/null
           docker compose up -d --wait
 
           # Caddyfile is a bind mount: its contents change without changing the
