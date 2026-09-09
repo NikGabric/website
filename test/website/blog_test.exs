@@ -8,7 +8,14 @@ defmodule Website.BlogTest do
 
     import Website.BlogFixtures
 
-    @invalid_attrs %{title: nil, body: nil, published_at: nil, excerpt: nil, slug: nil, published: nil}
+    @invalid_attrs %{
+      title: nil,
+      body: nil,
+      published_at: nil,
+      excerpt: nil,
+      slug: nil,
+      published: nil
+    }
 
     test "list_posts/0 returns all posts" do
       post = post_fixture()
@@ -21,7 +28,14 @@ defmodule Website.BlogTest do
     end
 
     test "create_post/1 with valid data creates a post" do
-      valid_attrs = %{title: "some title", body: "some body", published_at: ~U[2026-09-07 10:49:00Z], excerpt: "some excerpt", slug: "some slug", published: true}
+      valid_attrs = %{
+        title: "some title",
+        body: "some body",
+        published_at: ~U[2026-09-07 10:49:00Z],
+        excerpt: "some excerpt",
+        slug: "some slug",
+        published: true
+      }
 
       assert {:ok, %Post{} = post} = Blog.create_post(valid_attrs)
       assert post.title == "some title"
@@ -38,7 +52,15 @@ defmodule Website.BlogTest do
 
     test "update_post/2 with valid data updates the post" do
       post = post_fixture()
-      update_attrs = %{title: "some updated title", body: "some updated body", published_at: ~U[2026-09-08 10:49:00Z], excerpt: "some updated excerpt", slug: "some updated slug", published: false}
+
+      update_attrs = %{
+        title: "some updated title",
+        body: "some updated body",
+        published_at: ~U[2026-09-08 10:49:00Z],
+        excerpt: "some updated excerpt",
+        slug: "some updated slug",
+        published: false
+      }
 
       assert {:ok, %Post{} = post} = Blog.update_post(post, update_attrs)
       assert post.title == "some updated title"

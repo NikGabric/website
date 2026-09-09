@@ -35,3 +35,6 @@ website-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Deployment environment files hold production secrets and live only on the server.
+.env
+

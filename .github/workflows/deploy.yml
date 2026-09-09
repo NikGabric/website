@@ -1,0 +1,139 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Existing image SHA to redeploy (blank = build from main)"
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: test
+    if: ${{ inputs.image_tag == '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/nikgabric/website:${{ github.sha }}
+            ghcr.io/nikgabric/website:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [test, build]
+    if: ${{ !cancelled() && needs.test.result == 'success' && needs.build.result != 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Sync compose files
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -az -e "ssh -i ~/.ssh/id_ed25519" \
+            deploy/compose.yaml deploy/Caddyfile \
+            "$SSH_USER@$SSH_HOST:/opt/website/"
+
+      - name: Migrate and restart
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          IMAGE_TAG: ${{ inputs.image_tag || github.sha }}
+        run: |
+          # ssh joins its trailing argv with spaces into one string and the
+          # remote login shell re-parses it, so runner-side quoting does not
+          # survive the trip. image_tag is a free-text workflow_dispatch input,
+          # so restrict it to lowercase hex (what a git SHA is) before it can
+          # reach the server. A pure-hex string carries no shell metacharacters.
+          case "$IMAGE_TAG" in
+            *[!0-9a-f]* | "") echo "invalid IMAGE_TAG: $IMAGE_TAG" >&2; exit 1 ;;
+          esac
+
+          ssh -i ~/.ssh/id_ed25519 "$SSH_USER@$SSH_HOST" \
+            IMAGE_TAG="$IMAGE_TAG" bash -s <<'REMOTE'
+          set -euo pipefail
+          cd /opt/website
+          : "${IMAGE_TAG:?IMAGE_TAG not received}"
+          export IMAGE_TAG
+
+          # Persist the deployed tag so a bare `docker compose up -d` on the
+          # server reuses it instead of silently rolling forward to `latest`.
+          # .env also holds SECRET_KEY_BASE and the DB password: never truncate it.
+          # -f alone passes for a root-owned 600 file we cannot read: stat
+          # succeeds through directory permissions. Require readability too.
+          if [ ! -f .env ] || [ ! -r .env ]; then
+            echo "/opt/website/.env missing or unreadable"
+            exit 1
+          fi
+          tmp=$(mktemp /opt/website/.env.XXXXXX)
+          # grep exits 1 for "no match" (fine, absorb it) but 2 for a read
+          # error. `|| true` masked exit 2, leaving an empty temp file that the
+          # lines below would mv over .env, destroying SECRET_KEY_BASE and
+          # POSTGRES_PASSWORD. Absorb only exit 1.
+          grep -v '^IMAGE_TAG=' .env > "$tmp" || [ $? -eq 1 ]
+          printf 'IMAGE_TAG=%s\n' "$IMAGE_TAG" >> "$tmp"
+          chmod 600 "$tmp"
+          mv "$tmp" .env
+
+          docker compose pull
+          docker compose up -d db
+          docker compose run --rm app /app/bin/migrate
+          docker compose up -d --wait
+
+          # Caddyfile is a bind mount: its contents change without changing the
+          # service config hash, so `up -d` never restarts caddy. Reload is
+          # atomic and validated, so TLS termination is never dropped.
+          docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+
+          # Per-sha tags are never dangling, so a plain prune collects nothing.
+          # -a with an age bound reclaims them; images used by a container are kept.
+          docker image prune -af --filter "until=336h"
+          REMOTE
+
+      - name: Verify site is serving
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -fsS -o /dev/null -w '%{http_code}' https://gabric.dev/ || true)
+            [ "$code" = "200" ] && break
+            sleep 6
+          done
+          [ "$code" = "200" ] || { echo "site did not return 200 after deploy (last: ${code:-none})"; exit 1; }

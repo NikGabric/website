@@ -121,7 +121,8 @@ defmodule Website.Cv do
       %{
         title: "Computer and Information Science, Bachelor's degree",
         institution: "University of Ljubljana, Faculty of Computer and Information Science",
-        note: "Bachelor's thesis: Development of an information system for production company needs"
+        note:
+          "Bachelor's thesis: Development of an information system for production company needs"
       },
       %{
         title: "High school graduate",
