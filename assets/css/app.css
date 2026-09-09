@@ -103,7 +103,10 @@
 }
 
 /* This file is for your main application CSS */
-a {
-  @apply hover:underline;
-  @apply hover:cursor-pointer;
+@layer base {
+  a {
+    @apply hover:underline;
+    @apply hover:cursor-pointer;
+    @apply hover:text-secondary;
+  }
 }
