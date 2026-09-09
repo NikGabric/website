@@ -69,7 +69,13 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          rsync -az -e "ssh -i ~/.ssh/id_ed25519" \
+          # scp rather than rsync: rsync has to exist on BOTH ends, and it is not
+          # in Debian's base image, so requiring it adds a failure mode -- and a
+          # server-prep step that setup-server.sh does not perform -- for no
+          # benefit. Only two small files move here, so rsync's delta transfer
+          # buys nothing. scp ships with openssh-client, which is necessarily
+          # present: every other step in this job already reaches the box over ssh.
+          scp -i ~/.ssh/id_ed25519 \
             deploy/compose.yaml deploy/Caddyfile \
             "$SSH_USER@$SSH_HOST:/opt/website/"
 
