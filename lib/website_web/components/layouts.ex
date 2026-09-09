@@ -14,9 +14,9 @@ defmodule WebsiteWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="flex justify-between py-4 max-w-240 mx-auto">
-      <.link navigate={~p"/"}>
-        gabric.dev
+    <header class="flex justify-between items-end p-4 max-w-240 mx-auto border-l border-r border-dotted">
+      <.link navigate={~p"/"} class="flex gap-2 text-xl font-bold">
+        <img src={~p"/images/favicon.svg"} width={20} />gabric.dev
       </.link>
 
       <div class="flex gap-8">
@@ -29,8 +29,8 @@ defmodule WebsiteWeb.Layouts do
       </div>
     </header>
 
-    <main class="py-20 max-w-240 mx-auto">
-      <div class="mx-auto space-y-4">
+    <main class="max-w-240 mx-auto mb-4 border border-dotted">
+      <div class="mx-auto space-y-4 p-4">
         {render_slot(@inner_block)}
       </div>
     </main>
