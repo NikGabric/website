@@ -38,3 +38,4 @@ npm-debug.log
 # Deployment environment files hold production secrets and live only on the server.
 .env
 
+/posts/
