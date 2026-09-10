@@ -110,3 +110,90 @@
     @apply hover:text-secondary;
   }
 }
+
+/* Rendered markdown post bodies (see WebsiteWeb.BlogHTML.markdown/1).
+   Tailwind's preflight strips heading and list styling and there is no
+   typography plugin here, so the tags MDEx emits are styled by hand. */
+.markdown {
+  line-height: 1.7;
+}
+.markdown > * + * {
+  margin-top: 1rem;
+}
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  color: var(--color-primary);
+  line-height: 1.3;
+  margin-top: 2rem;
+}
+.markdown h2 {
+  font-size: 1.5rem;
+}
+.markdown h3 {
+  font-size: 1.25rem;
+}
+.markdown h4 {
+  font-size: 1.125rem;
+}
+.markdown strong {
+  font-weight: 700;
+}
+.markdown em {
+  font-style: italic;
+}
+.markdown a {
+  text-decoration: underline;
+}
+.markdown ul,
+.markdown ol {
+  padding-left: 1.5rem;
+}
+.markdown ul {
+  list-style: disc;
+}
+.markdown ol {
+  list-style: decimal;
+}
+.markdown li + li {
+  margin-top: 0.25rem;
+}
+.markdown blockquote {
+  border-left: 2px dotted var(--color-neutral);
+  padding-left: 1rem;
+  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+}
+.markdown code {
+  background: var(--color-base-300);
+  border-radius: var(--radius-field);
+  padding: 0.125rem 0.25rem;
+  font-size: 0.9em;
+}
+.markdown pre {
+  background: var(--color-base-300);
+  border-radius: var(--radius-box);
+  padding: 1rem;
+  overflow-x: auto;
+}
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+.markdown hr {
+  border-style: dotted;
+  border-color: var(--color-neutral);
+  margin: 2rem 0;
+}
+.markdown img {
+  border-radius: var(--radius-box);
+}
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.markdown th,
+.markdown td {
+  border: 1px solid var(--color-neutral);
+  padding: 0.5rem;
+  text-align: left;
+}
